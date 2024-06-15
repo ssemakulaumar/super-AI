@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"name": "super AI",
+			"path": "."
+		}
+	],
+	"settings": {
+		"materialkv.pythonFile": "main.py"
+	}
+}
