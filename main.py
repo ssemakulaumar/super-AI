@@ -10,6 +10,11 @@ from pynput.mouse import Controller as MouseController
 import pyautogui
 import json
 from datetime import datetime
+import socket
+import requests
+from bs4 import BeautifulSoup
+import tkinter as tk
+from tkinter import messagebox
 
 logging.basicConfig(level=logging.INFO)
 
@@ -61,9 +66,11 @@ def check_prerequisites():
     try:
         import pyttsx3
         import speech_recognition as sr
+        import pocketsphinx
         import pynput
         import pyautogui
-        import pocketsphinx
+        import requests
+        import bs4
     except ImportError as e:
         logging.info(f"Package not found: {e.name}. Installing now.")
         install_package(e.name)
@@ -174,6 +181,23 @@ def process_voice_command(command):
         tts_engine.say("Switching display")
         tts_engine.runAndWait()
         pyautogui.hotkey('ctrl', 'win', 'left' if 'left' in command else 'right')
+    elif "search" in command:
+        query = command.replace("search", "").strip()
+        tts_engine.say(f"Searching for {query}")
+        tts_engine.runAndWait()
+        search_results = search_internet(query)
+        tts_engine.say(f"Top result: {search_results[0]}")
+        tts_engine.runAndWait()
+    elif "connect to VPN" in command:
+        vpn_profile = command.replace("connect to VPN", "").strip()
+        tts_engine.say(f"Connecting to VPN: {vpn_profile}")
+        tts_engine.runAndWait()
+        connect_to_vpn(vpn_profile)
+    elif "connect to UDP" in command:
+        address, port = command.replace("connect to UDP", "").strip().split()
+        tts_engine.say(f"Connecting to UDP server at {address}:{port}")
+        tts_engine.runAndWait()
+        connect_to_udp_server(address, int(port))
     # Add more voice commands as needed
 
 def set_environment_variables():
@@ -207,6 +231,74 @@ def commit_changes():
     except RuntimeError as e:
         logging.error(f"Failed to commit changes: {e}")
 
+def search_internet(query):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    response = requests.get(f"https://www.google.com/search?q={query}", headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    results = []
+    for g in soup.find_all(class_='BVG0Nb'):
+        results.append(g.get_text())
+    return results
+
+def connect_to_vpn(profile):
+    try:
+        run_command(f"openvpn --config {profile}.ovpn")
+        logging.info(f"Connected to VPN profile: {profile}")
+    except RuntimeError as e:
+        logging.error(f"Failed to connect to VPN: {e}")
+
+def connect_to_udp_server(address, port):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(b"Hello, server", (address, port))
+        data, server = sock.recvfrom(4096)
+        logging.info(f"Received data from UDP server: {data}")
+    except socket.error as e:
+        logging.error(f"Failed to connect to UDP server: {e}")
+
+def create_gui():
+    def on_search():
+        query = entry_search.get()
+        results = search_internet(query)
+        messagebox.showinfo("Search Results", "\n".join(results[:5]))
+
+    def on_connect_vpn():
+        profile = entry_vpn.get()
+        connect_to_vpn(profile)
+        messagebox.showinfo("VPN", f"Connected to VPN profile: {profile}")
+
+    def on_connect_udp():
+        address = entry_udp_address.get()
+        port = int(entry_udp_port.get())
+        connect_to_udp_server(address, port)
+        messagebox.showinfo("UDP", f"Connected to UDP server at {address}:{port}")
+
+    root = tk.Tk()
+    root.title("Voice Command GUI")
+
+    tk.Label(root, text="Search Query:").grid(row=0, column=0, padx=10, pady=10)
+    entry_search = tk.Entry(root)
+    entry_search.grid(row=0, column=1, padx=10, pady=10)
+    tk.Button(root, text="Search", command=on_search).grid(row=0, column=2, padx=10, pady=10)
+
+    tk.Label(root, text="VPN Profile:").grid(row=1, column=0, padx=10, pady=10)
+    entry_vpn = tk.Entry(root)
+    entry_vpn.grid(row=1, column=1, padx=10, pady=10)
+    tk.Button(root, text="Connect to VPN", command=on_connect_vpn).grid(row=1, column=2, padx=10, pady=10)
+
+    tk.Label(root, text="UDP Address:").grid(row=2, column=0, padx=10, pady=10)
+    entry_udp_address = tk.Entry(root)
+    entry_udp_address.grid(row=2, column=1, padx=10, pady=10)
+
+    tk.Label(root, text="UDP Port:").grid(row=3, column=0, padx=10, pady=10)
+    entry_udp_port = tk.Entry(root)
+    entry_udp_port.grid(row=3, column=1, padx=10, pady=10)
+    tk.Button(root, text="Connect to UDP", command=on_connect_udp).grid(row=3, column=2, padx=10, pady=10)
+
+    root.mainloop()
+
 def main():
     check_prerequisites()
     set_environment_variables()
@@ -226,4 +318,5 @@ def main():
 
 if __name__ == "__main__":
     check_prerequisites()
+    create_gui()
     main()

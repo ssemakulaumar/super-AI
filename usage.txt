@@ -20,3 +20,36 @@ Usage:
     Run the script by double-clicking it or running it from the command line with python auto_update.py.
 
 Before running the script, make sure Git, Python, and pip are installed and available in your PATH. If not, follow the manual installation instructions provided in the install_prerequisites function.
+
+Key Updates:
+
+    Configuration File: A config.json file is used to store the username and password securely. If the file does not exist, the script prompts the user to input these details and then saves them.
+    Set Environment Variables: The script sets environment variables using the values from the configuration file or user input if the file is not present.
+    Persistence Across Runs: The configuration file ensures that the environment variables persist across script runs, so the user does not need to input them each time.
+
+This setup maintains the security of credentials and provides a seamless experience for the user.
+
+To enable the script to update itself with new self-written scripts, gain more access, handle self-awareness and upgrades, and commit changes to a GitHub repository, you'll need to add several functionalities. Here’s how you can do this:
+
+    Self-Writing and Self-Modification: The script will generate and append new scripts to itself.
+    Self-Awareness: The script will include logging and checks to understand its current state.
+    Self-Upgrading: The script will update itself and commit changes to the GitHub repository.
+    GitHub Integration: The script will use Git commands to commit and push changes.
+
+Key Additions:
+
+    Append New Script: The append_new_script function allows adding new code to the main file.
+    Commit Changes: The commit_changes function uses Git commands to add, commit, and push changes to the GitHub repository.
+    Self-Update Mechanism: The script now includes functions to update itself and commit those updates to the GitHub repository.
+
+Online and Offline Operation: The script checks for an internet connection and uses Google's API for online voice recognition and pocketsphinx for offline recognition.
+Automatic Package Installation: The script checks and installs the required packages if they are missing.
+Secure Credentials Handling: Environment variables are used for secure handling of login credentials.
+Enhanced Voice Commands: Added more complex interactions, including opening applications and switching displays.
+
+Usage:
+
+    Append New Script: Add new code snippets dynamically by calling append_new_script(new_code).
+    Commit Changes: Commit these changes to the GitHub repository using commit_changes() after appending the new script.
+
+This setup allows the script to modify itself, commit these modifications to the repository, and maintain self-awareness and upgrades.
